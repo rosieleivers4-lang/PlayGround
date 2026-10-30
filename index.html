@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#06110f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="TEALFANG — a 3D woodland hunt across 500 wilds. Run on all fours, feast on live prey, and fight the forest.">
+  <title>TEALFANG · The 500 Wilds</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="3D woodland game"></canvas>
+    <div id="vignette"></div>
+    <div id="dangerVignette"></div>
+    <div id="hitFlash"></div>
+    <div id="lifeFlash"></div>
+
+    <section id="hud" aria-live="polite">
+      <div class="hud-top-left">
+        <div class="level-chip glass">
+          <div class="level-eyebrow"><span id="phaseIcon" class="phase-icon day"></span><span id="phaseLabel">DAY</span><span class="slash">/</span><span id="levelNum">WILD 001</span></div>
+          <div id="levelName" class="level-name">Whispering Thicket</div>
+        </div>
+
+        <div class="life-panel glass">
+          <div class="life-heading">
+            <span class="life-label"><span class="heart-glyph">♥</span> VITALITY</span>
+            <span class="life-numbers"><strong id="lifeText">100</strong><span id="lifeMax">/100</span></span>
+          </div>
+          <div class="bar life-bar"><div id="lifeFill"></div><span class="bar-gloss"></span></div>
+          <div class="stamina-row">
+            <span class="stamina-label">SPRINT</span>
+            <div class="bar stamina-bar"><div id="staminaFill"></div></div>
+            <span id="drainRate" class="drain-rate">−0.9 / SEC</span>
+          </div>
+        </div>
+
+        <div class="objective-panel glass">
+          <div class="objective-head"><span>FEAST</span><strong id="feastCount">0 / 3</strong></div>
+          <div class="bar objective-bar"><div id="feastFill"></div></div>
+          <div class="objective-foot"><span id="objectiveHint">Live prey in the wild</span><span id="bossTag" class="boss-tag hidden">ALPHA</span></div>
+        </div>
+      </div>
+
+      <div class="hud-top-right">
+        <div class="hud-buttons">
+          <button id="btnPause" class="icon-button glass" aria-label="Pause game">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/></svg>
+          </button>
+        </div>
+        <div class="minimap-wrap glass">
+          <canvas id="minimap" width="240" height="240"></canvas>
+          <span class="minimap-n">N</span>
+          <span class="minimap-ring"></span>
+        </div>
+        <div class="score-chip glass"><span>SCORE</span><strong id="scoreText">0</strong></div>
+      </div>
+
+      <div id="comboBadge" class="combo-badge hidden"><span id="comboText">×2</span><small>COMBO</small></div>
+      <div id="toast" class="toast"></div>
+      <div id="banner" class="banner">
+        <div id="bannerKicker" class="banner-kicker">WILD 001</div>
+        <h2 id="bannerTitle">Whispering Thicket</h2>
+        <p id="bannerSub">DAY · FEAST ON 3 PREY</p>
+      </div>
+
+      <div id="targetPanel" class="target-panel glass hidden">
+        <div class="target-head"><span id="targetName">Rabbit</span><span id="targetState">PREY</span></div>
+        <div class="bar target-bar"><div id="targetFill"></div></div>
+      </div>
+
+      <div id="feastPrompt" class="feast-prompt hidden">
+        <span class="prompt-key">BITE</span>
+        <span>to feast <strong id="feastValue">+20 LIFE</strong></span>
+      </div>
+
+      <div id="controls">
+        <div id="stick" class="stick" aria-label="Movement joystick">
+          <span class="stick-arrows">▲</span>
+          <span id="stickKnob" class="stick-knob"></span>
+        </div>
+
+        <div class="dash-wrap">
+          <button id="btnDash" class="action dash" aria-label="Sprint">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 14h6l-1 8 9-13h-6l0-7Z"/></svg>
+            <small>DASH</small>
+          </button>
+        </div>
+
+        <div class="action-cluster">
+          <button id="btnPaw" class="action paw" aria-label="Paw strike">
+            <span class="cooldown" id="pawCd"></span>
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <ellipse cx="24" cy="31" rx="11" ry="9"/>
+              <ellipse cx="12" cy="20" rx="5" ry="7" transform="rotate(-20 12 20)"/>
+              <ellipse cx="21" cy="14" rx="4.6" ry="7" transform="rotate(-6 21 14)"/>
+              <ellipse cx="30" cy="14" rx="4.6" ry="7" transform="rotate(6 30 14)"/>
+              <ellipse cx="38" cy="21" rx="4.6" ry="7" transform="rotate(20 38 21)"/>
+            </svg>
+            <small>PAW</small>
+          </button>
+          <button id="btnBite" class="action bite" aria-label="Bite and feast">
+            <span class="cooldown" id="biteCd"></span>
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M9 13c5 3 9 10 10 18l4-6 4 6c1-8 5-15 10-18-4-2-9-3-14-3S13 11 9 13Z"/>
+              <path d="M17 27c2 1 4 2 7 2s5-1 7-2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+            <small>BITE</small>
+          </button>
+        </div>
+      </div>
+
+      <div id="desktopHints" class="desktop-hints">WASD / ARROWS move · SHIFT dash · F paw · SPACE bite · P pause</div>
+      <div id="tiltBadge" class="tilt-badge hidden">TILT STEER ON</div>
+    </section>
+
+    <section id="menu" class="screen menu-screen active">
+      <div class="menu-brand"><span class="brand-mark">◆</span> TEALFANG <small>THE 500 WILDS</small></div>
+      <div class="menu-panel">
+        <div class="menu-kicker">A HUNGER IN THE WOODS</div>
+        <h1>TEAL<span>FANG</span></h1>
+        <p class="tagline">Run on all fours. Feast to live. Survive 500 wilds.</p>
+        <p class="lore">A black-hooded pup with teal jaws and a silver-studded harness. The forest is endless, the rabbits are fast, and the night has teeth. Eat, fight, and keep moving — or the hunger wins.</p>
+
+        <div class="menu-actions">
+          <button id="btnStart" class="button primary">
+            <span id="startLabel">BEGIN THE HUNT</span>
+            <small id="startSub">LEVEL 001 · WHISPERING THICKET</small>
+          </button>
+          <button id="btnNew" class="button ghost hidden">NEW HUNT</button>
+          <button id="btnMap" class="button ghost">WILDS MAP</button>
+        </div>
+
+        <div class="menu-toggles">
+          <button id="btnTilt" class="toggle" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
+            <span>TILT STEER</span><b>OFF</b>
+          </button>
+          <button id="btnSound" class="toggle" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 8c2 2 2 6 0 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>SOUND</span><b>ON</b>
+          </button>
+        </div>
+
+        <div class="menu-controls">
+          <span><kbd>STICK</kbd> run / turn</span>
+          <span><kbd>PAW</kbd> swipe</span>
+          <span><kbd>BITE</kbd> kill / feast</span>
+          <span><kbd>DASH</kbd> sprint</span>
+        </div>
+      </div>
+
+      <div class="menu-stats">
+        <div><span>HIGHEST WILD</span><strong id="menuLevel">001</strong></div>
+        <div><span>BEST SCORE</span><strong id="menuBest">0</strong></div>
+        <div><span>TOTAL FEASTS</span><strong id="menuFeasts">0</strong></div>
+      </div>
+
+      <div class="menu-foot">
+        <span>Phone / tablet · touch controls</span>
+        <span>Optional tilt steering · iOS motion permission supported</span>
+      </div>
+    </section>
+
+    <section id="pause" class="screen modal-screen">
+      <div class="panel-card">
+        <div class="panel-kicker">THE HUNT WAITS</div>
+        <h2>PAUSED</h2>
+        <p class="panel-sub" id="pauseSub">Catch your breath. The rabbits won't.</p>
+        <div class="panel-actions">
+          <button id="btnResume" class="button primary">RESUME</button>
+          <button id="btnRestart" class="button ghost">RESTART WILD</button>
+          <button id="btnPauseMap" class="button ghost">WILDS MAP</button>
+          <button id="btnQuit" class="button ghost">LEAVE TO MENU</button>
+        </div>
+        <div class="panel-toggles">
+          <button id="btnTiltPause" class="toggle small" aria-pressed="false"><span>TILT</span><b>OFF</b></button>
+          <button id="btnCalibrate" class="toggle small hidden"><span>CALIBRATE TILT</span></button>
+          <button id="btnSoundPause" class="toggle small" aria-pressed="true"><span>SOUND</span><b>ON</b></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="levelComplete" class="screen modal-screen">
+      <div class="panel-card complete-card">
+        <div class="panel-kicker">THE FOREST YIELDS</div>
+        <h2>WILD CLEARED</h2>
+        <p class="panel-sub" id="completeName">Whispering Thicket</p>
+        <div class="stars" id="completeStars">★★★</div>
+        <div class="stat-grid">
+          <div><span>FEASTS</span><strong id="completeFeasts">3</strong></div>
+          <div><span>TIME</span><strong id="completeTime">01:12</strong></div>
+          <div><span>SCORE</span><strong id="completeScore">1,240</strong></div>
+          <div><span>VITALITY</span><strong id="completeLife">100</strong></div>
+        </div>
+        <div class="panel-actions">
+          <button id="btnNext" class="button primary">NEXT WILD</button>
+          <button id="btnCompleteMap" class="button ghost">WILDS MAP</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="death" class="screen modal-screen">
+      <div class="panel-card death-card">
+        <div class="panel-kicker">THE WILDS REMEMBER</div>
+        <h2 id="deathTitle">THE HUNGER WINS</h2>
+        <p class="panel-sub" id="deathSub">You starved in the dark.</p>
+        <div class="stat-grid">
+          <div><span>FEASTS</span><strong id="deathFeasts">2 / 5</strong></div>
+          <div><span>SURVIVED</span><strong id="deathTime">00:48</strong></div>
+          <div><span>SCORE</span><strong id="deathScore">620</strong></div>
+          <div><span>WILD</span><strong id="deathLevel">007</strong></div>
+        </div>
+        <div class="panel-actions">
+          <button id="btnRetry" class="button primary">TRY AGAIN</button>
+          <button id="btnDeathMap" class="button ghost">WILDS MAP</button>
+          <button id="btnDeathMenu" class="button ghost">MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="ending" class="screen modal-screen">
+      <div class="panel-card ending-card">
+        <div class="panel-kicker">500 WILDS · ONE HUNGER</div>
+        <h2>THE 500TH WILD</h2>
+        <p class="panel-sub">The forest has no end. You do.</p>
+        <p class="ending-lore">You have run every thicket, tasted every moon, and left your teal-marked paw in the oldest dark. The pup is a legend now. But somewhere beyond the last tree, something still moves.</p>
+        <div class="stat-grid">
+          <div><span>TOTAL FEASTS</span><strong id="endingFeasts">0</strong></div>
+          <div><span>BEST SCORE</span><strong id="endingBest">0</strong></div>
+        </div>
+        <div class="panel-actions">
+          <button id="btnEndless" class="button primary">RETURN TO THE WILDS</button>
+          <button id="btnEndingMenu" class="button ghost">MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="levelMap" class="screen modal-screen map-screen">
+      <div class="map-panel glass">
+        <div class="map-head">
+          <div>
+            <div class="panel-kicker">CHOOSE YOUR GROUND</div>
+            <h2>THE 500 WILDS</h2>
+          </div>
+          <div class="map-progress"><span id="mapProgress">1 / 500 UNLOCKED</span><button id="btnMapClose" class="icon-button glass" aria-label="Close map">✕</button></div>
+        </div>
+        <div id="levelGrid" class="level-grid"></div>
+      </div>
+    </section>
+
+    <div id="bootError" class="screen modal-screen hidden">
+      <div class="panel-card">
+        <div class="panel-kicker">THE FOREST WON'T LOAD</div>
+        <h2>WEBGL NEEDED</h2>
+        <p class="panel-sub">This game needs a browser with WebGL enabled. Try updating your browser or turning on hardware acceleration.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
