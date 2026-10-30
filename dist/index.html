@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0f1a12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f7a46'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle'%3E%F0%9F%A6%B4%3C/text%3E%3C/svg%3E"
+    />
+    <title>Bone Garden</title>
+    <script type="module" crossorigin src="/assets/index-BE9yt98p.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Co9EsD30.css">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+
+      <div id="hud" aria-live="polite">
+        <div class="hud-top">
+          <div class="hud-left">
+            <div class="day-chip"><span id="dayNum">DAY 1</span></div>
+            <div class="clock-chip"><span id="skyIcon">☀️</span><span id="clockLabel">Midday</span></div>
+          </div>
+
+          <div class="bars">
+            <div class="bar life">
+              <span class="bar-icon">❤️</span>
+              <div class="track"><i id="lifeFill"></i></div>
+              <b id="lifeVal">100</b>
+            </div>
+            <div class="bar food">
+              <span class="bar-icon">🍖</span>
+              <div class="track"><i id="foodFill"></i></div>
+              <b id="foodVal">100</b>
+            </div>
+          </div>
+
+          <div class="bone-chips">
+            <div class="score-chip"><span>★</span><b id="scoreVal">0</b></div>
+            <div class="bone-chip nickel"><span class="dot"></span><b id="cntNickel">0</b></div>
+            <div class="bone-chip silver"><span class="dot"></span><b id="cntSilver">0</b></div>
+            <div class="bone-chip gold"><span class="dot"></span><b id="cntGold">0</b></div>
+            <div class="bowl-chip"><span>🥣</span><b id="cntFood">0</b></div>
+          </div>
+        </div>
+
+        <div id="toast" class="toast"></div>
+        <div id="prompt" class="prompt"></div>
+
+        <div class="controls">
+          <div id="stick" class="stick" aria-label="Move">
+            <div id="knob" class="knob"></div>
+          </div>
+          <div class="actions">
+            <button id="tiltBtn" class="btn small" type="button">TILT</button>
+            <button id="eatBtn" class="btn" type="button">EAT</button>
+            <button id="digBtn" class="btn dig" type="button">DIG</button>
+          </div>
+        </div>
+
+        <div id="digMeter" class="dig-meter"><i></i></div>
+      </div>
+
+      <div id="startScreen" class="overlay">
+        <div class="panel">
+          <div class="logo"><span>🦴</span></div>
+          <h1>BONE GARDEN</h1>
+          <p class="tagline">Dig up bones. Keep your bowl full. Be home by nightfall.</p>
+          <ul class="howto">
+            <li><span>🐾</span><span class="howto-text">Walk the garden on all fours</span></li>
+            <li><span>🦴</span><span class="howto-text">Hold <b>DIG</b> to kick up nickel, silver and gold bones</span></li>
+            <li><span>🍖</span><span class="howto-text">Dig kibble and <b>EAT</b> at your bowl before the life bar runs out</span></li>
+            <li><span>🌙</span><span class="howto-text">Head to your kennel when the sun sets</span></li>
+          </ul>
+          <button id="startButton" class="play" type="button">LET'S DIG</button>
+          <p class="best">Best score <b id="bestScore">0</b></p>
+          <p class="fineprint">Phone &amp; tablet: joystick + buttons, or turn on TILT to steer by shifting your device.</p>
+        </div>
+      </div>
+
+      <div id="endScreen" class="overlay hidden">
+        <div class="panel">
+          <div class="logo sad">💤</div>
+          <h2>TOO HUNGRY TO DIG</h2>
+          <p class="tagline" id="endMessage">Your bowl ran dry and your life bar gave out.</p>
+          <div class="end-stats">
+            <div><b id="endScore">0</b><span>score</span></div>
+            <div><b id="endBones">0</b><span>bones</span></div>
+            <div><b id="endLevel">1</b><span>day</span></div>
+          </div>
+          <button id="restartButton" class="play" type="button">TRY AGAIN</button>
+        </div>
+      </div>
+
+      <div id="sleepScreen" class="overlay hidden">
+        <div class="panel sleep">
+          <div class="logo">🌙</div>
+          <h2>GOOD NIGHT</h2>
+          <p class="tagline">Your owner latches the kennel. Sleep tight — the garden refills by morning.</p>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>
