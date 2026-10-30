@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#07110f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="description" content="PUPWILD: 500 Woods — a 3D forest hunting game. Hunt, feed, and survive five hundred wild woods." />
+  <title>PUPWILD — 500 Woods</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307110f'/%3E%3Cpath d='M32 13 41 28h-7l9 16H21l9-16h-7z' fill='%235fe4e4'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="PUPWILD 3D game world"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- BOOT -->
+    <section id="loading" class="screen loading-screen">
+      <div class="boot-mark" aria-hidden="true">
+        <svg viewBox="0 0 120 120"><path d="M60 20 78 51h-14l17 31H39l17-31H42z" fill="currentColor"/><circle cx="60" cy="96" r="5" fill="currentColor" opacity=".5"/></svg>
+      </div>
+      <p class="eyebrow">A forest fable</p>
+      <h1 class="boot-title">PUP<span>WILD</span></h1>
+      <p class="boot-sub">500 WOODS</p>
+      <div class="boot-bar"><i id="bootBar"></i></div>
+      <p class="boot-text" id="bootText">Waking the woods…</p>
+    </section>
+
+    <!-- MAIN MENU -->
+    <section id="menu" class="screen menu screen-hidden">
+      <header class="menu-top">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8 43 28h-8l12 22H17l12-22h-8z" fill="currentColor"/></svg>
+          <span>PUPWILD</span>
+        </div>
+        <div class="menu-top-actions">
+          <button class="icon-btn" id="btnSettingsMenu" aria-label="Settings">⚙</button>
+        </div>
+      </header>
+
+      <div class="menu-hero">
+        <p class="eyebrow reveal">The woods remember</p>
+        <h1 class="game-title reveal d1">PUP<span>WILD</span></h1>
+        <p class="game-sub reveal d2">500 woods · one hungry hunter</p>
+        <p class="game-blurb reveal d3">You are the blue-muzzled pup. Run on all fours, hunt the rabbit, face the wolf, and keep the hunger at bay. Every wood is different. Every night is longer.</p>
+        <div class="menu-actions reveal d4">
+          <button id="btnContinue" class="btn btn-primary">
+            <span class="btn-kicker">Continue</span>
+            <span class="btn-label" id="continueLabel">Wood 001 · Dawnlit Pines</span>
+          </button>
+          <div class="menu-grid">
+            <button id="btnLevels" class="btn">Woods Map</button>
+            <button id="btnHow" class="btn">How to Hunt</button>
+            <button id="btnNew" class="btn btn-ghost">New Hunt</button>
+            <button id="btnSettings" class="btn btn-ghost">Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="menu-foot">
+        <div class="save-stat" id="menuStat">WANDERER · 0/500 WOODS</div>
+        <div class="foot-note">Touch, mouse &amp; keyboard · tilt optional</div>
+      </footer>
+    </section>
+
+    <!-- HUD -->
+    <section id="hud" class="hud screen-hidden" aria-live="polite">
+      <div class="hud-top">
+        <div class="level-chip">
+          <span class="chip-kicker" id="chipChapter">I · PINEWILD</span>
+          <span class="chip-title" id="chipLevel">WOOD 001</span>
+          <span class="chip-name" id="chipName">Dawnlit Pines</span>
+        </div>
+
+        <div class="vitals" id="vitals">
+          <div class="vital-head">
+            <span>VITALITY</span>
+            <span id="vitalNum">100</span>
+          </div>
+          <div class="vital-bar"><i id="vitalFill"></i><b id="vitalGhost"></b></div>
+          <div class="stamina-bar"><i id="staminaFill"></i></div>
+          <div class="vital-foot"><span id="hungerLabel">FED</span><span id="weatherLabel">MIST · DAWN</span></div>
+        </div>
+
+        <div class="time-chip">
+          <div class="time-icon" id="timeIcon">☀</div>
+          <div class="time-copy"><span id="clock">05:40</span><small id="dayLabel">DAY 1</small></div>
+        </div>
+      </div>
+
+      <div id="objective" class="objective">
+        <div class="obj-head"><span>THE HUNT</span><small id="objLevel">01 / 500</small></div>
+        <div class="obj-row" id="objPrey"><span class="obj-icon">❧</span><span class="obj-text">Devour rabbits</span><b>0 / 2</b></div>
+        <div class="obj-row" id="objHunt"><span class="obj-icon">✦</span><span class="obj-text">Best the beasts</span><b>0 / 1</b></div>
+        <div class="obj-progress"><i id="objFill"></i></div>
+      </div>
+
+      <div class="radar-wrap">
+        <canvas id="radar" width="220" height="220" aria-label="Woods radar"></canvas>
+        <span class="radar-n">N</span>
+        <small>SCENT</small>
+      </div>
+
+      <div id="gateCompass" class="gate-compass">
+        <span class="compass-arrow" id="compassArrow">➤</span>
+        <span class="compass-copy"><b>MOON GATE</b><small id="compassDist">48m</small></span>
+      </div>
+
+      <div class="hud-buttons">
+        <button id="btnPause" class="icon-btn glass" aria-label="Pause">Ⅱ</button>
+        <button id="btnSound" class="icon-btn glass" aria-label="Sound">♪</button>
+      </div>
+
+      <div id="prompt" class="prompt"><b>EAT</b><span>hold to feed</span><i></i></div>
+
+      <div id="touch" class="touch">
+        <div id="joystick" class="joystick">
+          <div class="stick-ring"></div>
+          <div id="stick" class="stick"><span></span></div>
+          <small>MOVE</small>
+        </div>
+        <div class="actions">
+          <button class="action eat" id="btnEat" data-action="eat"><b>EAT</b><span>feed</span></button>
+          <button class="action sprint" id="btnSprint" data-action="sprint"><b>RUN</b><span>sprint</span></button>
+          <button class="action paw" id="btnPaw" data-action="paw"><b>PAW</b><span>swipe</span></button>
+          <button class="action bite" id="btnBite" data-action="bite"><b>BITE</b><span>snap</span></button>
+        </div>
+      </div>
+
+      <div id="toastLayer" class="toast-layer"></div>
+      <div id="fightBanner" class="fight-banner"><span>ALPHA</span><b id="bossName">The Old Boar</b><i><em id="bossFill"></em></i></div>
+    </section>
+
+    <div id="damage" class="damage" aria-hidden="true"></div>
+    <div id="lowHealth" class="low-health" aria-hidden="true"></div>
+
+    <!-- LEVEL INTRO -->
+    <section id="levelIntro" class="modal-card level-intro screen-hidden" role="dialog" aria-modal="true">
+      <p class="eyebrow" id="introChapter">PINEWILD · I</p>
+      <h2 id="introName">Dawnlit Pines</h2>
+      <p class="intro-meta"><span id="introNumber">WOOD 001 OF 500</span><span id="introTime">DAWN · MIST</span></p>
+      <p class="intro-goal" id="introGoal">Devour 2 rabbits. Best 1 beast. Find the Moon Gate.</p>
+      <div class="intro-tips" id="introTips">
+        <span><b>Thumb</b> move</span><span><b>Drag</b> look</span><span><b>Paw &amp; bite</b> hunt</span><span><b>Eat</b> to live</span>
+      </div>
+      <button id="btnStart" class="btn btn-primary btn-wide">Enter the wood</button>
+    </section>
+
+    <!-- PAUSE -->
+    <section id="pause" class="screen pause screen-hidden" role="dialog" aria-modal="true">
+      <div class="panel">
+        <p class="eyebrow">The hunt waits</p>
+        <h2>Paused</h2>
+        <div class="panel-actions">
+          <button id="btnResume" class="btn btn-primary">Resume</button>
+          <button id="btnPauseSettings" class="btn">Settings</button>
+          <button id="btnQuit" class="btn btn-ghost">Return to menu</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settings" class="screen pause screen-hidden" role="dialog" aria-modal="true">
+      <div class="panel settings-panel">
+        <div class="panel-head"><div><p class="eyebrow">Make it yours</p><h2>Settings</h2></div><button id="btnCloseSettings" class="icon-btn" aria-label="Close">✕</button></div>
+        <div class="setting-row">
+          <div><b>Motion tilt</b><small>Steer by tilting your phone. Optional.</small></div>
+          <button class="switch" id="toggleTilt" role="switch" aria-checked="false"><i></i></button>
+        </div>
+        <div class="setting-row">
+          <div><b>Sound</b><small>Forest ambience and feedback.</small></div>
+          <button class="switch on" id="toggleSound" role="switch" aria-checked="true"><i></i></button>
+        </div>
+        <div class="setting-row">
+          <div><b>Camera sway</b><small>Gentle movement while running.</small></div>
+          <button class="switch on" id="toggleSway" role="switch" aria-checked="true"><i></i></button>
+        </div>
+        <div class="setting-row graphics-row">
+          <div><b>Graphics</b><small id="qualityHint">Balanced for this device.</small></div>
+          <div class="segmented" id="qualitySeg">
+            <button data-q="low">Low</button><button data-q="med" class="active">Balanced</button><button data-q="high">High</button>
+          </div>
+        </div>
+        <p class="motion-note" id="motionNote">Tilt needs motion access. On iPhone, enabling it will ask for permission.</p>
+        <button id="btnCloseSettings2" class="btn btn-primary btn-wide">Done</button>
+      </div>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section id="how" class="screen pause screen-hidden" role="dialog" aria-modal="true">
+      <div class="panel how-panel">
+        <div class="panel-head"><div><p class="eyebrow">Field notes</p><h2>How to Hunt</h2></div><button id="btnCloseHow" class="icon-btn" aria-label="Close">✕</button></div>
+        <div class="how-grid">
+          <article><span>01</span><h3>Run the wood</h3><p>Use the left thumbstick or WASD. On desktop, drag the mouse to look. Tilt controls can be enabled in settings.</p></article>
+          <article><span>02</span><h3>Paw &amp; bite</h3><p>Tap <b>PAW</b> to swipe in a wide arc. Tap <b>BITE</b> for a close, heavy snap. Enemies wind up before they strike — sidestep or strike first.</p></article>
+          <article><span>03</span><h3>Feed to live</h3><p>Your vitality constantly fades. Down a rabbit or beast, stand over it and hold <b>EAT</b>. The more you eat, the longer you last.</p></article>
+          <article><span>04</span><h3>Find the gate</h3><p>Complete the hunt and the Moon Gate wakes. Follow the compass, step through, and meet a new wood. There are 500.</p></article>
+        </div>
+        <div class="how-keys"><span><kbd>WASD</kbd> move</span><span><kbd>Shift</kbd> sprint</span><span><kbd>J</kbd> bite</span><span><kbd>K</kbd> paw</span><span><kbd>E</kbd> eat</span><span><kbd>Esc</kbd> pause</span></div>
+        <button id="btnCloseHow2" class="btn btn-primary btn-wide">Ready</button>
+      </div>
+    </section>
+
+    <!-- LEVEL MAP -->
+    <section id="levels" class="screen pause screen-hidden" role="dialog" aria-modal="true">
+      <div class="panel map-panel">
+        <div class="panel-head"><div><p class="eyebrow">The long trail</p><h2>Woods Map</h2></div><button id="btnCloseLevels" class="icon-btn" aria-label="Close">✕</button></div>
+        <div class="chapter-strip" id="chapterStrip"></div>
+        <div class="map-head"><h3 id="chapterTitle">I · Pinewild</h3><p id="chapterBlurb">Cold moss, tall pines, and the first hunger.</p></div>
+        <div class="level-grid" id="levelGrid"></div>
+        <div class="map-legend"><span class="dot done"></span> cleared <span class="dot open"></span> open <span class="dot locked"></span> locked <span class="dot boss"></span> alpha</div>
+      </div>
+    </section>
+
+    <!-- VICTORY -->
+    <section id="victory" class="screen screen-hidden result" role="dialog" aria-modal="true">
+      <div class="result-panel">
+        <p class="eyebrow">The wood yields</p>
+        <h2>Wood Cleared</h2>
+        <div class="result-stats">
+          <div><b id="vEaten">0</b><span>devoured</span></div>
+          <div><b id="vBeasts">0</b><span>beasts bested</span></div>
+          <div><b id="vVital">0</b><span>vitality left</span></div>
+        </div>
+        <p class="result-next" id="resultNext">Next: Wood 002 · Mosslight Pines</p>
+        <button id="btnNext" class="btn btn-primary btn-wide">Enter the next wood</button>
+        <button id="btnVictoryMenu" class="btn btn-ghost btn-wide">Return to menu</button>
+      </div>
+    </section>
+
+    <!-- GAME OVER -->
+    <section id="gameover" class="screen screen-hidden result" role="dialog" aria-modal="true">
+      <div class="result-panel gameover-panel">
+        <p class="eyebrow danger">The hunger wins</p>
+        <h2>The Forest Claims You</h2>
+        <p class="death-copy">Your vitality ran dry. Eat sooner, strike cleaner, and run when the wind turns.</p>
+        <div class="result-stats"><div><b id="dEaten">0</b><span>devoured</span></div><div><b id="dLevel">1</b><span>wood reached</span></div></div>
+        <button id="btnRetry" class="btn btn-primary btn-wide">Rise again</button>
+        <button id="btnGameoverMenu" class="btn btn-ghost btn-wide">Return to menu</button>
+      </div>
+    </section>
+
+    <!-- ENDING -->
+    <section id="ending" class="screen screen-hidden result" role="dialog" aria-modal="true">
+      <div class="result-panel ending-panel">
+        <p class="eyebrow">500 woods · one trail</p>
+        <h2>The Last Wood</h2>
+        <p class="death-copy">Every tree has fallen quiet. The blue muzzle lifts to a pale morning. You are no longer the hunted.</p>
+        <p class="ending-mark">PUPWILD</p>
+        <button id="btnEndingMenu" class="btn btn-primary btn-wide">Return to the beginning</button>
+      </div>
+    </section>
+
+    <div id="rotate" class="rotate-hint"><span>↻</span><p>Turn your device for a wider forest</p></div>
+    <div id="motionToast" class="motion-toast"></div>
+  </div>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.min.js" } }
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
