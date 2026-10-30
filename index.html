@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>BLACKSITE // ZERO HOUR</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.js",
+        "three/addons/": "./vendor/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene"></canvas>
+
+    <!-- ======================= IN-GAME HUD ======================= -->
+    <div id="hud" class="hidden" aria-hidden="true">
+      <div class="hud-grain"></div>
+      <div class="hud-vignette"></div>
+
+      <div id="objective" class="panel">
+        <div class="obj-tag"><span class="dot"></span> OP BLACKSITE <span class="obj-phase">PHASE <b id="phase-num">01</b></span></div>
+        <div class="obj-title" id="obj-title">SECURE THE YARD</div>
+        <div class="obj-sub"><span id="obj-sub">HOSTILES REMAINING</span><b id="hostile-count">06</b></div>
+        <div class="obj-bar"><i id="obj-progress"></i></div>
+      </div>
+
+      <div id="compass">
+        <div class="compass-mask">
+          <div class="compass-strip" id="compass-strip"></div>
+        </div>
+        <div class="compass-center"></div>
+        <div class="compass-heading" id="compass-heading">000</div>
+      </div>
+
+      <div id="minimap-wrap">
+        <canvas id="minimap" width="300" height="300"></canvas>
+        <div class="mm-label">FOB ANVIL <span>34S</span></div>
+        <div class="mm-n">N</div>
+      </div>
+
+      <div id="killfeed"></div>
+
+      <div id="crosshair">
+        <i class="ch ch-t"></i><i class="ch ch-b"></i><i class="ch ch-l"></i><i class="ch ch-r"></i>
+        <i class="ch-dot"></i>
+        <div id="hitmarker"><i></i><i></i><i></i><i></i></div>
+      </div>
+
+      <div id="notify">
+        <div id="notify-main"></div>
+        <div id="notify-sub"></div>
+      </div>
+
+      <div id="vitals" class="panel">
+        <div class="vital-head"><span>VITALS</span><span class="vital-status" id="vital-status">STABLE</span></div>
+        <div class="vital-row">
+          <svg class="pulse" viewBox="0 0 100 24" preserveAspectRatio="none"><polyline id="pulse-line" points="0,12 12,12 16,6 20,19 24,12 38,12 42,9 46,15 50,12 66,12 70,4 74,21 78,12 100,12"/></svg>
+          <div class="vital-num" id="health-num">100</div>
+        </div>
+        <div class="vital-bar"><i id="health-bar"></i></div>
+        <div class="vital-sub"><span>OPERATOR</span><span>KEVLAR / L3</span></div>
+      </div>
+
+      <div id="ammo" class="panel">
+        <div class="ammo-weapon" id="ammo-weapon">M4A1 / BLOCK II</div>
+        <div class="ammo-row">
+          <div class="ammo-mag"><span id="ammo-mag">30</span><em id="ammo-reserve">/ 210</em></div>
+          <div class="ammo-meta"><span id="ammo-cal">5.56 × 45 MM</span><span class="fire-mode" id="fire-mode">AUTO</span></div>
+        </div>
+        <div class="ammo-bar"><i id="ammo-bar"></i></div>
+        <div class="reload-bar" id="reload-bar"><i id="reload-progress"></i></div>
+      </div>
+
+      <div id="stats-strip">
+        <span>KILLS <b id="stat-kills">0</b></span>
+        <span>HEADSHOTS <b id="stat-heads">0</b></span>
+        <span>ACCURACY <b id="stat-acc">--</b></span>
+        <span>TIME <b id="stat-time">00:00</b></span>
+      </div>
+
+      <div id="toast"></div>
+      <div id="damage"></div>
+      <div id="damage-dirs"></div>
+    </div>
+
+    <!-- ========================== MENU ========================== -->
+    <div id="menu" class="screen">
+      <div class="menu-shade"></div>
+      <div class="menu-top">
+        <div class="menu-brand"><span class="brand-mark"></span> IRREGULAR <span class="thin">/</span> OPERATIONS</div>
+        <div class="menu-meta">FOB ANVIL <span>•</span> 34S TC 812 407 <span>•</span> 0347 LOCAL</div>
+      </div>
+      <div class="menu-content">
+        <div class="menu-kicker"><span class="line"></span> OPERATION 07 <span class="line"></span></div>
+        <h1 class="title"><span>BLACKSITE</span><em>ZERO HOUR</em></h1>
+        <p class="menu-blurb">A sanctioned incursion into a compromised forward operating base. The compound is dark, the crew is gone, and something is still moving between the containers.</p>
+        <div class="menu-actions">
+          <button id="deploy" class="deploy">
+            <span class="deploy-bg"></span>
+            <span class="deploy-label">DEPLOY</span>
+            <span class="deploy-sub">ENTER THE AO</span>
+          </button>
+          <div class="menu-note">Headphones recommended<br><span>Three.js / WebGL2</span></div>
+        </div>
+        <div class="controls">
+          <div><kbd>W A S D</kbd><span>MOVE</span></div>
+          <div><kbd>SHIFT</kbd><span>SPRINT</span></div>
+          <div><kbd>CTRL</kbd><span>CROUCH</span></div>
+          <div><kbd>LMB</kbd><span>FIRE</span></div>
+          <div><kbd>RMB</kbd><span>AIM</span></div>
+          <div><kbd>R</kbd><span>RELOAD</span></div>
+          <div><kbd>1 / 2</kbd><span>WEAPON</span></div>
+          <div><kbd>SPACE</kbd><span>JUMP</span></div>
+        </div>
+      </div>
+      <div class="menu-footer">
+        <div><span class="live-dot"></span> 100% PROCEDURAL ASSETS // NO EXTERNAL TEXTURES</div>
+        <div class="menu-foot-right"><button id="mute-btn" class="link-btn" type="button">AUDIO: ON</button><span>V 1.0.7</span></div>
+      </div>
+    </div>
+
+    <!-- ======================== LOADING ======================== -->
+    <div id="loading" class="screen">
+      <div class="load-center">
+        <div class="load-mark"><i></i><i></i><i></i><i></i></div>
+        <div class="load-title">BLACKSITE <em>ZERO HOUR</em></div>
+        <div class="load-status" id="load-status">INITIALIZING RENDER PIPELINE</div>
+        <div class="load-bar"><i id="load-progress"></i></div>
+        <div class="load-pct" id="load-pct">00</div>
+        <div class="load-log" id="load-log"></div>
+      </div>
+      <div class="load-foot">THREE.JS / WEBGL2 / PROCEDURAL PIPELINE</div>
+    </div>
+
+    <!-- ========================= DEATH ========================= -->
+    <div id="death" class="screen hidden">
+      <div class="death-shade"></div>
+      <div class="death-content">
+        <div class="death-kicker">SIGNAL LOST</div>
+        <h2>K.I.A.</h2>
+        <p id="death-line">OPERATOR DOWN. THE COMPOUND REMAINS HOSTILE.</p>
+        <div class="death-stats">
+          <div><b id="death-kills">0</b><span>ELIMINATIONS</span></div>
+          <div><b id="death-heads">0</b><span>HEADSHOTS</span></div>
+          <div><b id="death-acc">0%</b><span>ACCURACY</span></div>
+          <div><b id="death-time">00:00</b><span>DURATION</span></div>
+        </div>
+        <button id="redeploy" class="deploy small"><span class="deploy-bg"></span><span class="deploy-label">REDEPLOY</span></button>
+      </div>
+    </div>
+
+    <!-- ========================= PAUSE ========================= -->
+    <div id="pause" class="screen hidden">
+      <div class="pause-shade"></div>
+      <div class="pause-content">
+        <div class="menu-kicker"><span class="line"></span> TACTICAL PAUSE <span class="line"></span></div>
+        <h2>HOLD</h2>
+        <p>The AO is frozen. Resume when ready.</p>
+        <div class="pause-actions">
+          <button id="resume" class="deploy small"><span class="deploy-bg"></span><span class="deploy-label">RESUME</span></button>
+          <button id="restart" class="link-btn" type="button">RESTART MISSION</button>
+          <button id="pause-mute" class="link-btn" type="button">AUDIO: ON</button>
+        </div>
+        <div class="pause-hint">ESC TO RESUME</div>
+      </div>
+    </div>
+
+    <!-- ======================= VICTORY ======================= -->
+    <div id="victory" class="screen hidden">
+      <div class="victory-shade"></div>
+      <div class="victory-content">
+        <div class="death-kicker">COMPOUND SECURED</div>
+        <h2>EXFIL</h2>
+        <p>All hostile elements neutralized. FOB Anvil is dark but stable.</p>
+        <div class="death-stats">
+          <div><b id="win-kills">0</b><span>ELIMINATIONS</span></div>
+          <div><b id="win-heads">0</b><span>HEADSHOTS</span></div>
+          <div><b id="win-acc">0%</b><span>ACCURACY</span></div>
+          <div><b id="win-time">00:00</b><span>DURATION</span></div>
+        </div>
+        <button id="again" class="deploy small"><span class="deploy-bg"></span><span class="deploy-label">RUN IT AGAIN</span></button>
+      </div>
+    </div>
+
+    <div id="fatal" class="hidden"></div>
+  </div>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
